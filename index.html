@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trendify</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .card-enter {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .card-enter-active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        .btn-spinner {
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            width: 1rem;
+            height: 1rem;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .trending-card, .template-choice-card {
+            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .trending-card:hover, .template-choice-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-4">
+
+    <div class="w-full max-w-4xl mx-auto">
+        <!-- Header Section -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+                Trendify
+            </h1>
+            <p class="text-gray-400 mt-2">Enter any topic, pick a trend, and let AI create the perfect meme.</p>
+        </header>
+
+        <!-- Main Content Area -->
+        <main>
+            <!-- Input Form Section -->
+            <div id="meme-form-container" class="bg-gray-800 p-6 rounded-xl shadow-2xl border border-gray-700">
+                <div class="flex flex-col gap-4">
+                    <label for="topic-input" class="sr-only">Enter your topic</label>
+                    <textarea id="topic-input" name="topic" rows="3" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:outline-none transition" placeholder="e.g., Taylor Swift's wedding and her excessive dependence on airplanes..."></textarea>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                         <button id="lucky-btn" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-4 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300 flex items-center justify-center gap-2">
+                             I'm Feeling Lucky
+                        </button>
+                        <button id="search-btn" class="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300 flex items-center justify-center gap-2">
+                             Search Templates
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Spinner Section -->
+            <div id="loading-spinner" class="text-center py-10 hidden">
+                <div role="status">
+                    <svg aria-hidden="true" class="inline w-10 h-10 text-gray-600 animate-spin fill-purple-500" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+                        <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+                    </svg>
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <p id="loading-text" class="mt-4 text-gray-400">Brewing up a fresh meme...</p>
+            </div>
+
+            <!-- Template Selection Section -->
+            <div id="template-selection-container" class="mt-8 hidden">
+                 <h2 class="text-2xl font-bold text-center mb-6 text-gray-300">Choose a Template</h2>
+                 <div id="template-choices" class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <!-- Template choices will be injected here -->
+                 </div>
+            </div>
+
+            <!-- Result Section -->
+            <div id="result-container" class="mt-8">
+                <!-- Content will be injected here by JavaScript -->
+            </div>
+
+            <!-- Trending Now Section -->
+            <section id="trending-section" class="mt-12">
+                <h2 class="text-2xl font-bold text-center mb-6 text-gray-300">🔥 Trending Topics</h2>
+                <div id="trending-grid" class="flex flex-wrap justify-center gap-3">
+                    <!-- Trending topics will be injected here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const topicInput = document.getElementById('topic-input');
+        const luckyBtn = document.getElementById('lucky-btn');
+        const searchBtn = document.getElementById('search-btn');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const loadingText = document.getElementById('loading-text');
+        const resultContainer = document.getElementById('result-container');
+        const trendingGrid = document.getElementById('trending-grid');
+        const templateSelectionContainer = document.getElementById('template-selection-container');
+        const templateChoices = document.getElementById('template-choices');
+
+        const API_BASE_URL = 'http://127.0.0.1:5000/api';
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', fetchTrendingTopics);
+        luckyBtn.addEventListener('click', handleLuckySubmit);
+        searchBtn.addEventListener('click', handleSearchSubmit);
+
+        // --- Main Functions ---
+
+        async function handleLuckySubmit(event) {
+            event.preventDefault();
+            const topic = getTopic();
+            if (!topic) return;
+            
+            setLoading(true, "Finding the perfect meme...");
+            clearResults();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/lucky`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic }),
+                });
+                if (!response.ok) throw await getError(response);
+                
+                const data = await response.json();
+                displayEditor(data);
+            } catch (error) {
+                handleError(error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function handleSearchSubmit(event) {
+            event.preventDefault();
+            const topic = getTopic();
+            if (!topic) return;
+
+            setLoading(true, "Searching for top templates...");
+            clearResults();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic }),
+                });
+                if (!response.ok) throw await getError(response);
+                
+                const templates = await response.json();
+                displayTemplateChoices(templates);
+            } catch (error) {
+                handleError(error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function displayTemplateChoices(templates) {
+            if (!templates || templates.length === 0) {
+                displayError("No suitable templates found for this topic.");
+                return;
+            }
+            templateChoices.innerHTML = templates.map(template => `
+                <div class="template-choice-card bg-gray-800 rounded-lg overflow-hidden border border-gray-700 cursor-pointer" 
+                     onclick="selectTemplate('${template.id}')">
+                    <img src="${API_BASE_URL}/proxy?url=${encodeURIComponent(template.base_url)}" alt="${template.name}" class="w-full h-32 object-cover" loading="lazy">
+                    <div class="p-2">
+                        <h3 class="text-sm font-semibold text-center text-gray-300 truncate">${template.name}</h3>
+                    </div>
+                </div>
+            `).join('');
+            templateSelectionContainer.classList.remove('hidden');
+        }
+
+        async function selectTemplate(templateId) {
+            const topic = getTopic();
+            if (!topic) return;
+
+            setLoading(true, "Generating witty captions...");
+            clearResults();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/caption`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic, template_id: templateId }),
+                });
+                if (!response.ok) throw await getError(response);
+
+                const data = await response.json();
+                displayEditor(data);
+            } catch (error) {
+                handleError(error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        // --- Trending Topics Functions ---
+
+        async function fetchTrendingTopics() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/trending`);
+                if (!response.ok) throw new Error('Could not fetch trending topics.');
+                const trending = await response.json();
+                displayTrendingTopics(trending);
+            } catch (error) {
+                trendingGrid.innerHTML = `<p class="text-red-400 text-center">${error.message}</p>`;
+            }
+        }
+
+        function displayTrendingTopics(topics) {
+            trendingGrid.innerHTML = topics.map(topic => `
+                <button class="trending-card bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium py-2 px-4 rounded-full border border-gray-700" 
+                        onclick="useTopic('${topic.name.replace(/'/g, "\\'")}')">
+                    ${topic.name}
+                </button>
+            `).join('');
+        }
+        
+        function useTopic(topicName) {
+            topicInput.value = topicName;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // --- DOM Manipulation & Editor ---
+
+        function displayEditor(data) {
+            const captionInputsHTML = data.captions.map((caption, index) => `
+                <input type="text" class="meme-text-input w-full bg-gray-600 border border-gray-500 rounded-md p-2" value="${caption}" placeholder="Text for box ${index + 1}">
+            `).join('');
+            resultContainer.innerHTML = `
+                <div class="bg-gray-800 rounded-xl shadow-2xl border border-gray-700 overflow-hidden card-enter" data-template-id="${data.template.id}">
+                    <img id="meme-preview-image" src="${API_BASE_URL}/proxy?url=${encodeURIComponent(data.template.base_url)}" alt="${data.template.name}" class="w-full h-auto">
+                    <div class="p-6">
+                        <h2 class="text-lg font-semibold mb-4">Edit Captions:</h2>
+                        <div class="flex flex-col gap-3">${captionInputsHTML}</div>
+                        <div class="flex flex-col sm:flex-row gap-3 mt-4">
+                            <button id="preview-btn" class="w-full sm:w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2"><span>Preview</span></button>
+                            <button id="download-btn" class="w-full sm:w-1/2 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2"><span>Download</span></button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            resultContainer.querySelector('#preview-btn').addEventListener('click', previewMeme);
+            resultContainer.querySelector('#download-btn').addEventListener('click', downloadMeme);
+            setTimeout(() => resultContainer.querySelector('.card-enter')?.classList.add('card-enter-active'), 10);
+        }
+
+        async function previewMeme() {
+            await updateMemeImage(document.getElementById('preview-btn'), 'Updating...');
+        }
+
+        async function downloadMeme() {
+            const downloadBtn = document.getElementById('download-btn');
+            const finalUrl = downloadBtn.dataset.finalUrl || await updateMemeImage(downloadBtn, 'Generating...');
+            if (finalUrl) {
+                const proxyUrl = `${API_BASE_URL}/proxy?url=${encodeURIComponent(finalUrl)}`;
+                await downloadImage(proxyUrl, `trendify-meme.jpg`);
+            }
+        }
+        
+        async function updateMemeImage(button, loadingText) {
+            const memeImage = document.getElementById('meme-preview-image');
+            if (!button || !memeImage) return null;
+            
+            setButtonLoading(button, true, loadingText);
+            try {
+                const finalUrl = await getCustomizedMemeUrl();
+                memeImage.src = `${API_BASE_URL}/proxy?url=${encodeURIComponent(finalUrl)}`;
+                document.getElementById('download-btn').dataset.finalUrl = finalUrl;
+                return finalUrl;
+            } catch (error) {
+                alert(`Could not create preview: ${error.message}`);
+                return null;
+            } finally {
+                setButtonLoading(button, false, button.querySelector('span').textContent);
+            }
+        }
+
+        async function getCustomizedMemeUrl() {
+            const card = resultContainer.querySelector('[data-template-id]');
+            const templateId = card.dataset.templateId;
+            const textInputs = card.querySelectorAll('.meme-text-input');
+            const texts = Array.from(textInputs).map(input => input.value);
+            const response = await fetch(`${API_BASE_URL}/customize`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ template_id: templateId, texts: texts }),
+            });
+            if (!response.ok) throw await getError(response);
+            const data = await response.json();
+            return data.url;
+        }
+
+        async function downloadImage(imageSrc, fileName) {
+            try {
+                const response = await fetch(imageSrc);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } catch (error) {
+                console.error('Download failed, opening in new tab as fallback:', error);
+                window.open(imageSrc, '_blank');
+            }
+        }
+        
+        // --- Utility & Helper Functions ---
+
+        function getTopic() {
+            const topic = topicInput.value.trim();
+            if (!topic) {
+                displayError("Please enter a topic first.");
+                return null;
+            }
+            return topic;
+        }
+
+        function clearResults() {
+            resultContainer.innerHTML = '';
+            templateSelectionContainer.classList.add('hidden');
+        }
+
+        async function getError(response) {
+            const errorData = await response.json().catch(() => ({ error: 'An unknown server error occurred.' }));
+            return new Error(errorData.error || 'Something went wrong on the server.');
+        }
+
+        function handleError(error) {
+            console.error('Error:', error);
+            displayError(error.message);
+        }
+
+        function displayError(message) {
+            clearResults();
+            resultContainer.innerHTML = `
+                <div class="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg text-center card-enter">
+                    <strong>Oops!</strong> <span class="block sm:inline">${message}</span>
+                </div>
+            `;
+            setTimeout(() => resultContainer.querySelector('.card-enter')?.classList.add('card-enter-active'), 10);
+        }
+
+        function setLoading(isLoading, text = "Brewing up a fresh meme...") {
+            loadingText.textContent = text;
+            loadingSpinner.classList.toggle('hidden', !isLoading);
+            luckyBtn.disabled = isLoading;
+            searchBtn.disabled = isLoading;
+        }
+
+        function setButtonLoading(button, isLoading, loadingText) {
+            if (!button) return;
+            const originalTextSpan = button.querySelector('span');
+            if (!button.dataset.originalText) {
+                button.dataset.originalText = originalTextSpan ? originalTextSpan.textContent : '';
+            }
+            if (isLoading) {
+                button.disabled = true;
+                button.innerHTML = `<div class="btn-spinner"></div><span>${loadingText}</span>`;
+            } else {
+                button.disabled = false;
+                button.innerHTML = `<span>${button.dataset.originalText}</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
+
